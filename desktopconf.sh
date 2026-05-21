@@ -88,6 +88,7 @@ else
 	wget https://github.com/zen-browser/desktop/releases/latest/download/zen.linux-x86_64.tar.xz
 	tar -xf zen.linux-x86_64.tar.xz
 	rm zen.linux-x86_64.tar.xz #Cleanup
+    mv zen /opt/zen/ # "Install"
 fi
 	
 ################# VS Code ####################
@@ -115,3 +116,4 @@ fi
 sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="af-magic"/' /home/$USERNAME/.zshrc
 # Enabling Zsh
 chsh -s /bin/zsh $USERNAME
+source ~/.zshrc
