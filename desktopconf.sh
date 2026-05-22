@@ -129,8 +129,8 @@ echo -e "\nPlease select a configuration stage\n"
 echo -e "#1) - Stage #1 | Install dependencies and ML4W base configuration."
 echo -e "#2) - Stage #2 | Debloat and customize."
 
-read -n $1 
-case $1 in
+read -n 1 option
+case $option in
 	1)
 	stage_1
 	;;
