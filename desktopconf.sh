@@ -31,7 +31,15 @@ echo -e "Running Desktop config Stage 1\n Checking if Hyprland is instaled"
 if rpm -q hyprland 2>/dev/null; then
 	echo -e "ML4W OS/ Hyprland is already installed\n Proceeding with next stage."
 else
+	#Run ML4W script!
 	bash <(curl -s https://ml4w.com/os/stable)
+	if rpm -q hyprland 2>/dev/null; then
+		echo -e "ML4Q script successfully ran. Rebooting machine..."
+		reboot -h now
+	else
+		echo -e "Hyprland install was not successful. Exiting script..."
+		exit 1
+	fi
 fi
 
 #######################################
@@ -61,6 +69,8 @@ done
 ##################
 ##.. Stage #3 ..##
 ##################
+
+############### RPM Packages ##################
 echo -e "Running Desktop config Stage 3\n Installing new packages."
 
 echo -e "Enabling additional repositories."
@@ -77,6 +87,8 @@ for pkg in "${NEWPKG[@]}"; do
 		echo -e "Package" $(rpm -q "$pkg") "is already installed."
 	fi
 done 
+sed -i 's/$terminal = kitty/$terminal = alacritty/' /home/$USERNAME/.config/hypr/hyprland.conf
+##############################################
 
 echo -e "Installing unmanaged packages!\n"
 ############### Zen Browser ##################
