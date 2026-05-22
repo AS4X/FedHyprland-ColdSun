@@ -4,10 +4,14 @@
 #####---    Global Variables    ---#####
 ########################################
 USERNAME=asyx
+HOSTNAME=lynx-01
+#########################################
 
-########################################
-#####---  Global Dependencies   ---#####
-########################################
+stage_1() {
+
+#########################################
+#####---  Install Dependencies   ---#####
+#########################################
 
 DEVPKG=(git make)
 echo -e "Installing essential dependencies"
@@ -20,36 +24,25 @@ for pkg in "${DEVPKG[@]}"; do
 done
 
 #######################################
-#####--- ML4Q/ Hyprland install---#####
+#####--- ML4W/ Hyprland install---#####
 #######################################
 
-##################
-##.. Stage #1 ..##
-##################
-
-echo -e "Running Desktop config Stage 1\n Checking if Hyprland is instaled"
+echo -e "Running Desktop config Stage 1\n Checking if Hyprland is installed"
 if rpm -q hyprland 2>/dev/null; then
-	echo -e "ML4W OS/ Hyprland is already installed\n Proceeding with next stage."
+	echo -e "ML4W OS/ Hyprland is already installed\n Please re-run script and select Stage #2 instead."
 else
 	#Run ML4W script!
 	bash <(curl -s https://ml4w.com/os/stable)
-	if rpm -q hyprland 2>/dev/null; then
-		echo -e "ML4Q script successfully ran. Rebooting machine..."
-		reboot -h now
-	else
-		echo -e "Hyprland install was not successful. Exiting script..."
-		exit 1
-	fi
 fi
+echo "$(rpm -q hyprland) was successfully installed. Please reboot the machine."
+}
+
+
+stage_2() {
 
 #######################################
 #####---       Debloater       ---#####
 #######################################
-
-##################
-##.. Stage #2 ..##
-##################
-
 echo -e "Running Desktop config Stage 2\n Detecting unnecessary packages"
 
 BLOATPKG=(kpat dragon okular krdc kwrite konsole kitty akgregator kmail kmines kmouth kolourpaint spectacle kamoso)
@@ -65,10 +58,6 @@ done
 #######################################
 #####---     Customization     ---#####
 #######################################
-
-##################
-##.. Stage #3 ..##
-##################
 
 ############### RPM Packages ##################
 echo -e "Running Desktop config Stage 3\n Installing new packages."
@@ -117,7 +106,6 @@ else
 	dnf check-update
 	dnf install -y code
 fi
-
 ################ Oh My Zsh! ################
 
 if [ -f /home/$USERNAME/.zshrc ]; then
@@ -131,3 +119,28 @@ sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="af-magic"/' /home/$USERNAME/.zshrc
 # Enabling Zsh
 chsh -s /bin/zsh $USERNAME
 source ~/.zshrc
+
+}
+
+echo "###################################################"
+echo "###\\\\....  Asyx Desktop Configuration  ....///###"
+echo "###################################################"
+echo -e "\nPlease select a configuration stage\n"
+echo -e "#1) - Stage #1 | Install dependencies and ML4W base configuration."
+echo -e "#2) - Stage #2 | Debloat and customize."
+
+read -n $1 
+case $1 in
+	1)
+	stage_1
+	;;
+	2)
+	stage_2
+	;;
+	*)
+	echo "Invalid option. Exiting script..."
+	exit 1
+	;;
+esac
+
+
