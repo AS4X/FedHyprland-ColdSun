@@ -88,7 +88,9 @@ else
 	wget https://github.com/zen-browser/desktop/releases/latest/download/zen.linux-x86_64.tar.xz
 	tar -xf zen.linux-x86_64.tar.xz
 	rm zen.linux-x86_64.tar.xz #Cleanup
-    mv zen /opt/zen/ # "Install"
+    mv zen /opt/zen/ # "Installation"
+	#Registering application PATH
+	echo -e 'export PATH="$PATH:/opt/zen"' > /home/$USERNAME/.zshrc
 fi
 	
 ################# VS Code ####################
