@@ -23,21 +23,6 @@ for pkg in "${DEVPKG[@]}"; do
     fi
 done
 
-#######################################
-#####--- ML4W/ Hyprland install---#####
-#######################################
-
-echo -e "Running Desktop config Stage 1\n Checking if Hyprland is installed"
-if rpm -q hyprland 2>/dev/null; then
-	echo -e "ML4W OS/ Hyprland is already installed\n Please re-run script and select Stage #2 instead."
-else
-	#Run ML4W script!
-	bash <(curl -s https://ml4w.com/os/stable)
-fi
-echo "$(rpm -q hyprland) was successfully installed. Please reboot the machine."
-}
-
-
 stage_2() {
 
 #######################################
