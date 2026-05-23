@@ -1,1 +1,1 @@
-# FedHyprland-ColdSun
+# Fedora-ColdSun
