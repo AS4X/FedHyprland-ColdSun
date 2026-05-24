@@ -137,3 +137,5 @@ fi
 echo -e "Select the desired computer hostname\n"
 read -n HOSTNAME
 echo -e "\nYou have entered $HOSTNAME"
+
+stage_2 ###--- Run Stage 2!
