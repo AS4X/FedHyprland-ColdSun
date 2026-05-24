@@ -1,56 +1,17 @@
 #!/bin/bash
 
-########################################
-#####---    Global Variables    ---#####
-########################################
-USERNAME=asyx
-HOSTNAME=lynx-01
-#########################################
-
 stage_1() {
-
-#########################################
-#####---  Install Dependencies   ---#####
-#########################################
-
-DEVPKG=(git make)
-echo -e "Installing essential dependencies"
-for pkg in "${DEVPKG[@]}"; do
-    if rpm -q "$pkg" 2>/dev/null; then
-        echo -e "$pkg is already installed"
-    else
-        dnf install -y "$pkg"
-    fi
-done
-
-stage_2() {
-
-#######################################
-#####---       Debloater       ---#####
-#######################################
-echo -e "Running Desktop config Stage 2\n Detecting unnecessary packages"
-
-BLOATPKG=(kpat dragon okular krdc kwrite konsole kitty akgregator kmail kmines kmouth kolourpaint spectacle kamoso)
-for pkg in "${BLOATPKG[@]}"; do
-	if rpm -q "$pkg" 2>/dev/null; then
-		echo -e "Uninstalling $pkg"
-		dnf -y remove "$pkg"
-	else
-		echo -e "No packages to remove.\n Proceeding with next stage."
-	fi
-done  
-
 #######################################
 #####---     Customization     ---#####
 #######################################
 
-############### RPM Packages ##################
-echo -e "Running Desktop config Stage 3\n Installing new packages."
+#########---   RPM Packages   ---###########
+echo -e "Running Desktop config Stage 1\n Installing new packages."
 
 echo -e "Enabling additional repositories."
 echo -e "Enabling Alacritty repository."
-dnf copr enable pschyska/alacritty																																	                            
-NEWPKG=(vscode alacritty)
+dnf copr enable pschyska/alacritty                   
+NEWPKG=(git vscode alacritty)
 
 echo -e "Installing packages through RPM...\n"
 for pkg in "${NEWPKG[@]}"; do
@@ -60,8 +21,7 @@ for pkg in "${NEWPKG[@]}"; do
 	else
 		echo -e "Package" $(rpm -q "$pkg") "is already installed."
 	fi
-done 
-sed -i 's/$terminal = kitty/$terminal = alacritty/' /home/$USERNAME/.config/hypr/hyprland.conf
+done
 ##############################################
 
 echo -e "Installing unmanaged packages!\n"
@@ -105,27 +65,75 @@ sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="af-magic"/' /home/$USERNAME/.zshrc
 chsh -s /bin/zsh $USERNAME
 source ~/.zshrc
 
+### END STAGE 1 ###
+}
+
+stage_2() {
+#######################################
+#####---       Debloater       ---#####
+#######################################
+echo -e "Running Desktop config Stage 2\n Detecting unnecessary packages"
+
+GROUPPKG=(kde-apps kde-media)
+for grouppkg in "${GROUPPKG[@]}"; do
+	if dnf group list --installed | grep -q $grouppkg 2>/dev/null; then
+		echo -e "Uninstalling $pkg"
+		dnf -y group remove "$pkg"
+	else
+		echo -e "No packages to remove.\n Proceeding with next stage."
+	fi
+done
+
+PKG=(kpat dragon okular krdc kwrite konsole kitty akgregator kmail kmines kmouth kmahjongg kolourpaint spectacle kamoso)
+for pkg in "${PKG[@]}"; do
+	if rpm -q "$pkg" 2>/dev/null; then
+		echo -e "Uninstalling $pkg"
+		dnf -y remove "$pkg"
+	else
+		echo -e "No packages to remove.\n Proceeding with next stage."
+	fi
+done
+### END STAGE 2 ###
 }
 
 echo "###################################################"
 echo "###\\\\....  Asyx Desktop Configuration  ....///###"
 echo "###################################################"
-echo -e "\nPlease select a configuration stage\n"
-echo -e "#1) - Stage #1 | Install dependencies and ML4W base configuration."
-echo -e "#2) - Stage #2 | Debloat and customize."
+echo -e "Script is currently running as: $USER.\n Would you like to proceed with this account? Enter y/n\n"
+read -n 1 OPTION
 
-read -n 1 option
-case $option in
-	1)
-	stage_1
-	;;
-	2)
-	stage_2
-	;;
-	*)
-	echo "Invalid option. Exiting script..."
+####################################
+#### Configure Global Variables ####
+####################################
+
+### Select USERNAME variable
+
+if [ $OPTION = 'y' ]; then
+	USERNAME="$USER"
+	echo "\nContinuing desktop configuration based on user: $USERNAME"
+elif [ $OPTION = 'n' ]; then
+	echo -e "\nInput the desired username:\n"
+	read USERNAME
+	echo -e "\nYou have entered user: $USERNAME\n"
+else
+	echo -e "\nInvalid option selected. Exiting script..."
 	exit 1
-	;;
-esac
+fi
+### Detect validity of user.
 
+echo -e "Running user validation..."
+if [ -d /home/$USERNAME ]; then
+	echo "Valid user detected!"
+elif [ $USERNAME = 'root' ]; then
+	echo -e "Although script may run as root user, the root account may not be selected for desktop configuration purposes. Re-run script and select a different user.\n Exiting script...\n"
+	exit 1
+else
+	echo "User not found. Exiting script..."
+	exit 1
+fi
 
+### Select desired hostname
+
+echo -e "Select the desired computer hostname\n"
+read -n HOSTNAME
+echo -e "\nYou have entered $HOSTNAME"
