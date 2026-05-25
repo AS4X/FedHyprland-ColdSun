@@ -2,16 +2,16 @@
 
 stage_1() {
 #######################################
-#####---     Customization     ---#####
+#####---      New Packages     ---#####
 #######################################
 
 #########---   RPM Packages   ---###########
-echo -e "Running Desktop config Stage 1\n Installing new packages."
+echo -e "###--- Running Desktop config Stage 1 ---###\n Installing new packages."
 
 echo -e "Enabling additional repositories."
 echo -e "Enabling Alacritty repository."
 dnf copr enable pschyska/alacritty                   
-NEWPKG=(git vscode alacritty)
+NEWPKG=(git zsh alacritty micro nmap btop keepassxc)
 
 echo -e "Installing packages through RPM...\n"
 for pkg in "${NEWPKG[@]}"; do
@@ -22,10 +22,13 @@ for pkg in "${NEWPKG[@]}"; do
 		echo -e "Package" $(rpm -q "$pkg") "is already installed."
 	fi
 done
-##############################################
-
+#######################################
+#//        Unmanaged Packages       \\#
+#// #####                      #### \\#
 echo -e "Installing unmanaged packages!\n"
+
 ############### Zen Browser ##################
+
 if [ -d /opt/zen ]; then
 	echo "Zen Browser is already installed!"
 else
@@ -36,9 +39,14 @@ else
 	rm zen.linux-x86_64.tar.xz #Cleanup
     mv zen /opt/zen/ # "Installation"
 	#Registering application PATH
-	echo -e 'export PATH="$PATH:/opt/zen"' > /home/$USERNAME/.zshrc
+	echo -e 'export PATH="$PATH:/opt/zen"' >> /home/$USERNAME/.zshrc
+	###########    Desktop Shortcut     ################
+	echo -e '[Desktop Entry]\n Name=Zen Browser\n Exec=/opt/zen/zen\n Comment=Web Browser\n Terminal=false\n Icon=/opt/zen/icons/icon.png\n Type=Application' > /home/$USERNAME/Desktop/zen.desktop
+	wget https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Zen_Browser_logo_%28red_circles%29.svg/1280px-Zen_Browser_logo_%28red_circles%29.svg.png #Icon download
+	mv 1280px-Zen_Browser_logo_\(red_circles\).svg.png /opt/zen/icons/icon.png
+	chmod +x /home/$USERNAME/Desktop/zen.desktop
 fi
-	
+
 ################# VS Code ####################
 if rpm -q code 2>/dev/null; then
 	echo "VS Code is already installed!"
@@ -50,6 +58,15 @@ else
 	#Installation
 	dnf check-update
 	dnf install -y code
+fi
+################ Sublime Txt ###############
+
+if rpm -q sublime-text 2>/dev/null; then
+	echo "Sublime Text is already installed!"
+else
+	rpm -v --import https://download.sublimetext.com/sublimehq-rpm-pub.gpg
+	dnf config-manager addrepo --from-repofile=https://download.sublimetext.com/rpm/stable/x86_64/sublime-text.repo
+	dnf install -y sublime-text
 fi
 ################ Oh My Zsh! ################
 
@@ -63,7 +80,7 @@ fi
 sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="af-magic"/' /home/$USERNAME/.zshrc
 # Enabling Zsh
 chsh -s /bin/zsh $USERNAME
-source ~/.zshrc
+source /home/$USERNAME/.zshrc
 
 ### END STAGE 1 ###
 }
@@ -74,17 +91,17 @@ stage_2() {
 #######################################
 echo -e "Running Desktop config Stage 2\n Detecting unnecessary packages"
 
-GROUPPKG=(kde-apps kde-media)
+GROUPPKG=(desktop-accessibility kde-apps kde-media kde-pim)
 for grouppkg in "${GROUPPKG[@]}"; do
 	if dnf group list --installed | grep -q $grouppkg 2>/dev/null; then
-		echo -e "Uninstalling $pkg"
-		dnf -y group remove "$pkg"
+		echo -e "Uninstalling $grouppkg"
+		dnf -y group remove "$grouppkg"
 	else
-		echo -e "No packages to remove.\n Proceeding with next stage."
+		echo -e "No group packages to remove.\n Proceeding with next stage."
 	fi
 done
 
-PKG=(kpat dragon okular krdc kwrite konsole kitty akgregator kmail kmines kmouth kmahjongg kolourpaint spectacle kamoso)
+PKG=(kpat dragon okular krdc kwrite konsole kitty akregator kmail kmines kmouth kmahjongg kolourpaint spectacle kamoso ark)
 for pkg in "${PKG[@]}"; do
 	if rpm -q "$pkg" 2>/dev/null; then
 		echo -e "Uninstalling $pkg"
@@ -96,29 +113,79 @@ done
 ### END STAGE 2 ###
 }
 
-echo "###################################################"
-echo "###\\\\....  Asyx Desktop Configuration  ....///###"
-echo "###################################################"
-echo -e "Script is currently running as: $USER.\n Would you like to proceed with this account? Enter y/n\n"
+stage_3(){
+
+echo "#######################################"
+echo "#####---     System Config     ---#####"
+echo '#######################################'
+
+select_hostname(){
+### Select desired hostname
+
+echo -e "Select the desired computer hostname\n"
+read HOSTNAME
+HOSTNAME=$HOSTNAME
+
+if [ ! $HOSTNAME = '' ]; then
+	echo -e "\nYou have entered $HOSTNAME"
+	hostnamectl hostname $HOSTNAME	# Hostname
+else
+	echo -e "Please enter a valid hostname"
+	select_hostname # Run function again should input be invalid
+fi
+}
+
+set_desktop(){
+
+	if [ -d /home/$USERNAME/Pictures/Bck-img/ ]; then
+		echo "Folder for background images detected"
+	else
+		su $USERNAME sh -c "$(mkdir /home/$USERNAME/Pictures/Bck-img/)"
+		echo "Folder for background images has been created"
+	fi
+	###--- Download background images
+	FILENAMES=('neon-liquid1.jpg' 'neon-liquid2.jpg')
+	curl -fsSL "https://downloadscdn6.magnific.com/53876/107/106180.jpg?filename=vibrant-neon-colorful-liquid-background.jpg&filename=106180.jpg&token=exp=1779744955~hmac=bd688b540312e40a92ca7f7be3151503" -o "/home/$USERNAME/Pictures/Bck-img/${FILENAMES[0]}"
+	curl -fsSL "https://downloadscdn6.magnific.com/53876/96/95498.jpg?filename=vibrant-neon-colorful-liquid.jpg&filename=95498.jpg&token=exp=1779746311~hmac=5677e7d62f76e38f70b29b5ee2474eef" -o "/home/$USERNAME/Pictures/Bck-img/${FILENAMES[1]}"
+	
+	###--- Apply image
+	su $USERNAME sh -c $"(plasma-apply-wallpaperimage /home/$USERNAME/Pictures/Bck-img/${FILENAMES[0]})"
+}
+
+echo -e "\nUpdate computer's hostname? Enter Y/N:"
 read -n 1 OPTION
+
+if [ $OPTION = 'y' ]; then
+	select_hostname ###--- Run function to update hostname
+elif [ $OPTION = 'n' ]; then
+	echo -e "\nSkipping computer hostname update."
+else
+	echo -e "\nInvalid selection, skipping computer hostname update."
+fi
+
+set_desktop ###--- Run function to set desktop background
+### END STAGE 3 ###
+}
+
+echo "###################################################"
+echo "###\\\....  Asyx Desktop Configuration  ....///###"
+echo "###################################################"
 
 ####################################
 #### Configure Global Variables ####
 ####################################
 
-### Select USERNAME variable
+### Username
 
-if [ $OPTION = 'y' ]; then
-	USERNAME="$USER"
-	echo "\nContinuing desktop configuration based on user: $USERNAME"
-elif [ $OPTION = 'n' ]; then
-	echo -e "\nInput the desired username:\n"
+if [ $USER = 'root' ]; then
+	echo -e "Script is currently running as: $USER.\nPlease input the name of the target user:"
 	read USERNAME
 	echo -e "\nYou have entered user: $USERNAME\n"
 else
-	echo -e "\nInvalid option selected. Exiting script..."
+	echo -e "Script is currently running as: $USER.\n Please run the script as root, then configure the name of the target user on the script."
 	exit 1
 fi
+
 ### Detect validity of user.
 
 echo -e "Running user validation..."
@@ -132,10 +199,8 @@ else
 	exit 1
 fi
 
-### Select desired hostname
+###---	Init stages
 
-echo -e "Select the desired computer hostname\n"
-read -n HOSTNAME
-echo -e "\nYou have entered $HOSTNAME"
-
+stage_1 ###--- Run Stage 1!
 stage_2 ###--- Run Stage 2!
+stage_3 ###--- Run Stage 3!
