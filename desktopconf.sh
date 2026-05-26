@@ -1,9 +1,9 @@
 #!/bin/bash
 
 stage_1() {
-#######################################
-#####---      New Packages     ---#####
-#######################################
+echo "#######################################"
+echo "#####---      New Packages     ---#####"
+echo "#######################################"
 
 #########---   RPM Packages   ---###########
 echo -e "###--- Running Desktop config Stage 1 ---###\n Installing new packages."
@@ -74,7 +74,7 @@ if [ -f /home/$USERNAME/.zshrc ]; then
 	echo "Oh My Zsh configuration file found"
 else
 	echo "Downloading Oh My Zsh!"
-	su $USERNAME sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+	su - "$USERNAME" -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
 fi
 # Configure Shell theme!
 sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="af-magic"/' /home/$USERNAME/.zshrc
@@ -86,9 +86,10 @@ source /home/$USERNAME/.zshrc
 }
 
 stage_2() {
-#######################################
-#####---       Debloater       ---#####
-#######################################
+
+echo "#######################################"
+echo "#####---       Debloater       ---#####"
+echo "#######################################"
 echo -e "Running Desktop config Stage 2\n Detecting unnecessary packages"
 
 GROUPPKG=(desktop-accessibility kde-apps kde-media kde-pim)
@@ -135,6 +136,36 @@ else
 fi
 }
 
+set_theme(){
+
+	###--- Install Orchis
+	echo "..............................."
+	echo ".......     Themes     ........"
+	echo '...............................'
+	echo -e "\nInstalling Orchis theme\n"
+
+	if [ -d /home/$USERNAME/.local/share/plasma/desktoptheme/Orchis-dark ]; then
+		echo "Orchis theme is already installed"
+	else
+		git clone https://github.com/vinceliuice/Orchis-kde.git
+		chmod +x ./Orchis-kde/install.sh
+		bash ./Orchis-kde/install.sh
+		su - "$USERNAME" -c 'sh -c "$(plasma-apply-lookandfeel -a "com.github.vinceliuice.Orchis-dark")"'
+	fi
+
+	###--- Install YAMIS
+	echo ".............................."
+	echo ".......     Icons     ........"
+	echo '..............................'
+	echo -e "\nInstalling YAMIS icons\n"
+	if [ -d /home/$USERNAME/.local/share/icons/YAMIS ]; then
+		echo "YAMIS icons are already installed"
+	else
+		curl -fsSL "https://ocs-dl.fra1.cdn.digitaloceanspaces.com/data/files/1752923957/yet-another-monochrome-icon-set.tar.gz" -o ./yet-another-monochrome-icon-set.tar.gz
+		tar -xf ./yet-another-monochrome-icon-set.tar.gz
+	fi
+}
+
 set_desktop(){
 
 	if [ -d /home/$USERNAME/Pictures/Bck-img/ ]; then
@@ -144,15 +175,16 @@ set_desktop(){
 		echo "Folder for background images has been created"
 	fi
 	###--- Download background images
-	FILENAMES=('neon-liquid1.jpg' 'neon-liquid2.jpg')
-	curl -fsSL "https://downloadscdn6.magnific.com/53876/107/106180.jpg?filename=vibrant-neon-colorful-liquid-background.jpg&filename=106180.jpg&token=exp=1779744955~hmac=bd688b540312e40a92ca7f7be3151503" -o "/home/$USERNAME/Pictures/Bck-img/${FILENAMES[0]}"
-	curl -fsSL "https://downloadscdn6.magnific.com/53876/96/95498.jpg?filename=vibrant-neon-colorful-liquid.jpg&filename=95498.jpg&token=exp=1779746311~hmac=5677e7d62f76e38f70b29b5ee2474eef" -o "/home/$USERNAME/Pictures/Bck-img/${FILENAMES[1]}"
+	FILENAMES=('neon-liquid1.jpg' 'neon-liquid2.jpg' 'shapes1.jpg')
+	curl -fsSL "https://raw.githubusercontent.com/AS4X/Fedora-ColdSun/refs/heads/main/img/${FILENAMES[0]}" -o "/home/$USERNAME/Pictures/Bck-img/${FILENAMES[0]}"
+	curl -fsSL "https://raw.githubusercontent.com/AS4X/Fedora-ColdSun/refs/heads/main/img/${FILENAMES[1]}" -o "/home/$USERNAME/Pictures/Bck-img/${FILENAMES[1]}"
+	curl -fsSL "https://raw.githubusercontent.com/AS4X/Fedora-ColdSun/refs/heads/main/img/${FILENAMES[2]}" -o "/home/$USERNAME/Pictures/Bck-img/${FILENAMES[2]}"
 	
 	###--- Apply image
 	su $USERNAME sh -c $"(plasma-apply-wallpaperimage /home/$USERNAME/Pictures/Bck-img/${FILENAMES[0]})"
 }
 
-echo -e "\nUpdate computer's hostname? Enter Y/N:"
+echo -e "\nUpdate computer's hostname? Enter Y/N:\n"
 read -n 1 OPTION
 
 if [ $OPTION = 'y' ]; then
@@ -162,7 +194,7 @@ elif [ $OPTION = 'n' ]; then
 else
 	echo -e "\nInvalid selection, skipping computer hostname update."
 fi
-
+set_theme ###--- Run function to set desktop theme
 set_desktop ###--- Run function to set desktop background
 ### END STAGE 3 ###
 }
