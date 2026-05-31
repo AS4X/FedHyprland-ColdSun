@@ -152,18 +152,6 @@ set_theme(){
 		bash ./Orchis-kde/install.sh
 		su - "$USERNAME" -c 'sh -c "$(plasma-apply-lookandfeel -a "com.github.vinceliuice.Orchis-dark")"'
 	fi
-
-	###--- Install YAMIS
-	echo ".............................."
-	echo ".......     Icons     ........"
-	echo '..............................'
-	echo -e "\nInstalling YAMIS icons\n"
-	if [ -d /home/$USERNAME/.local/share/icons/YAMIS ]; then
-		echo "YAMIS icons are already installed"
-	else
-		curl -fsSL "https://ocs-dl.fra1.cdn.digitaloceanspaces.com/data/files/1752923957/yet-another-monochrome-icon-set.tar.gz" -o ./yet-another-monochrome-icon-set.tar.gz
-		tar -xf ./yet-another-monochrome-icon-set.tar.gz
-	fi
 }
 
 set_desktop(){
@@ -176,12 +164,34 @@ set_desktop(){
 	fi
 	###--- Download background images
 	FILENAMES=('neon-liquid1.jpg' 'neon-liquid2.jpg' 'shapes1.jpg')
-	curl -fsSL "https://raw.githubusercontent.com/AS4X/Fedora-ColdSun/refs/heads/main/img/${FILENAMES[0]}" -o "/home/$USERNAME/Pictures/Bck-img/${FILENAMES[0]}"
-	curl -fsSL "https://raw.githubusercontent.com/AS4X/Fedora-ColdSun/refs/heads/main/img/${FILENAMES[1]}" -o "/home/$USERNAME/Pictures/Bck-img/${FILENAMES[1]}"
-	curl -fsSL "https://raw.githubusercontent.com/AS4X/Fedora-ColdSun/refs/heads/main/img/${FILENAMES[2]}" -o "/home/$USERNAME/Pictures/Bck-img/${FILENAMES[2]}"
-	
-	###--- Apply image
-	su $USERNAME sh -c $"(plasma-apply-wallpaperimage /home/$USERNAME/Pictures/Bck-img/${FILENAMES[0]})"
+	for img in "${FILENAMES[@]}"; do
+		echo "Downloading image: $img"
+		curl -fsSL "https://raw.githubusercontent.com/AS4X/Fedora-ColdSun/refs/heads/main/img/$img" -o "/home/$USERNAME/Pictures/Bck-img/$img"
+	done
+	plasma-apply-wallpaperimage "/home/$USERNAME/Pictures/Bck-img/${FILENAMES[1]}"
+
+	###--- Download icon pack
+	TMPDOTLOCAL="/home/$USERNAME/tmpdotlocal"
+	mkdir $TMPDOTLOCAL
+	curl -fL "https://raw.githubusercontent.com/AS4X/Fedora-ColdSun/refs/heads/main/src/dotlocal-share-icons.tar" -o "$TMPDOTLOCAL/dotlocal-share-icons.tar"
+	tar -xf "$TMPDOTLOCAL/dotlocal-share-icons.tar"
+
+	###--- KDE Desktop Settings
+	DOTCONF=(dolphinrc 
+	kdeglobals 
+	kdeglobalshortcutsrckwinrc 
+	kwinrc
+	plasma-localerc 
+	plasma-org.kde.plasma.desktop-appletsrc 
+	plasmarc 
+	plasmashellrc
+	)
+	# TMPDOTCONF="/home/$USERNAME/tmpdotconf"
+	# mkdir $TMPDOTCONF
+	for file in "${DOTCONF[@]}"; do
+		echo "Downloading file: $file"
+		curl -fsSL "https://raw.githubusercontent.com/AS4X/Fedora-ColdSun/refs/heads/main/src/dotconfig/$file" -o "/home/$USERNAME/.config/$file"
+	done
 }
 
 echo -e "\nUpdate computer's hostname? Enter Y/N:\n"
@@ -199,9 +209,9 @@ set_desktop ###--- Run function to set desktop background
 ### END STAGE 3 ###
 }
 
-echo "###################################################"
+echo "##################################################"
 echo "###\\\....  Asyx Desktop Configuration  ....///###"
-echo "###################################################"
+echo "##################################################"
 
 ####################################
 #### Configure Global Variables ####
